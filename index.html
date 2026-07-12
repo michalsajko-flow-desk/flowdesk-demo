@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowDesk – Workflow Orchestrátor pre malé firmy</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f5ee;
+    --surface2: #eef5f1;
+    --border: #dde5de;
+    --accent: #2d6a4f;
+    --accent2: #3d8361;
+    --accent3: #d9a441;
+    --text: #1b2a22;
+    --muted: #6f7d68;
+    --danger: #c94f4f;
+    --slack: #611f69;
+    --trello: #0052cc;
+    --form-col: #1a3a4a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(45,106,79,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,106,79,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: rgba(45,106,79,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(45,106,79,0.25);
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 70px 40px 50px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+    position: relative;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 520px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+  }
+
+  /* ── USE CASE TABS ── */
+  .use-cases {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .uc-tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .uc-tab:hover, .uc-tab.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(45,106,79,0.08);
+  }
+
+  /* ── MAIN DEMO AREA ── */
+  .demo-wrapper {
+    position: relative;
+    z-index: 5;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* ── STEP INDICATOR ── */
+  .step-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 36px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: font-family;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.3s;
+    justify-content: center;
+  }
+
+  .step-item.active .step-num {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  .step-item.done .step-num {
+    border-color: var(--accent2);
+    background: rgba(61,131,97,0.15);
+    color: var(--accent2);
+  }
+
+  .step-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .step-item.active .step-label { color: var(--text); }
+
+  .step-connector {
+    width: 60px;
+    height: 1px;
+    background: var(--border);
+    margin: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── PANELS ── */
+  .panel-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    .panel-row { grid-template-columns: 1fr; }
+    header { padding: 16px 20px; }
+    .step-label { display: none; }
+    .step-connector { width: 30px; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .panel.active-panel {
+    border-color: rgba(45,106,79,0.4);
+    box-shadow: 0 0 30px rgba(45,106,79,0.06);
+  }
+
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+  }
+
+  .panel-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .panel-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 1px;
+    letter-spacing: 0.05em;
+  }
+
+  .panel-body {
+    padding: 18px;
+  }
+
+  /* ── FORM PANEL ── */
+  .form-field {
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: rgba(45,106,79,0.4);
+  }
+
+  .form-textarea { resize: none; height: 72px; line-height: 1.5; }
+
+  .form-select option { background: #eef5f1; }
+
+  .priority-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .priority-btn {
+    flex: 1;
+    padding: 7px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+
+  .priority-btn.sel-low { border-color: var(--accent2); color: var(--accent2); background: rgba(61,131,97,0.1); }
+  .priority-btn.sel-mid { border-color: var(--accent3); color: var(--accent3); background: rgba(217,164,65,0.1); }
+  .priority-btn.sel-high { border-color: var(--danger); color: var(--danger); background: rgba(201,79,79,0.1); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: #ffffff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .submit-btn:hover { background: #1e5238; transform: translateY(-1px); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── TASK PANEL ── */
+  .task-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    transition: all 0.4s;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .task-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .task-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .task-id {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .task-title {
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  .tag-low { background: rgba(61,131,97,0.15); color: var(--accent2); }
+  .tag-mid { background: rgba(217,164,65,0.15); color: var(--accent3); }
+  .tag-high { background: rgba(201,79,79,0.15); color: var(--danger); }
+  .tag-open { background: rgba(45,106,79,0.12); color: var(--accent); }
+  .tag-inprogress { background: rgba(61,131,97,0.12); color: var(--accent2); }
+  .tag-done { background: rgba(111,125,104,0.2); color: var(--muted); }
+
+  .task-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .task-status-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .status-btn {
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    min-width: 80px;
+  }
+
+  .status-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(45,106,79,0.05);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
+  .empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.4; }
+
+  /* ── CHAT PANEL ── */
+  .chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 200px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-bottom: 4px;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .chat-msg {
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.4s;
+  }
+
+  .chat-msg.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .msg-bot {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 10px 2px;
+    padding: 10px 12px;
+  }
+
+  .msg-thread {
+    margin-left: 14px;
+    background: rgba(45,106,79,0.04);
+    border: 1px solid rgba(45,106,79,0.12);
+    border-left: 2px solid rgba(45,106,79,0.3);
+    border-radius: 0 10px 10px 0;
+    padding: 9px 12px;
+  }
+
+  .msg-sender {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+
+  .msg-bot .msg-sender { color: var(--accent2); }
+  .msg-thread .msg-sender { color: var(--accent); }
+
+  .msg-text {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  .msg-text strong { color: var(--accent3); }
+
+  .msg-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .thread-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-left: 14px;
+    margin-top: 2px;
+    margin-bottom: -4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .thread-label::before {
+    content: '';
+    display: inline-block;
+    width: 1px;
+    height: 10px;
+    background: var(--border);
+  }
+
+  /* ── INTEGRATION BADGES ── */
+  .integrations {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .int-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.04em;
+  }
+
+  .int-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── ARROW CONNECTORS ── */
+  .flow-arrows {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    pointer-events: none;
+  }
+
+  /* ── NOTIFICATION TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    max-width: 300px;
+    z-index: 100;
+    box-shadow: 0 8px 40px rgba(27,42,34,0.1);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .toast-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .toast-body {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.45;
+  }
+
+  /* ── SCENARIO LABEL ── */
+  .scenario-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 24px;
+    letter-spacing: 0.06em;
+  }
+
+  .scenario-label span {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ── RESET BTN ── */
+  .reset-btn {
+    display: block;
+    margin: 24px auto 0;
+    padding: 9px 22px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── STEP COMPLETE INDICATOR ── */
+  .step-complete {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    text-align: center;
+    padding: 8px;
+    background: rgba(61,131,97,0.06);
+    border: 1px solid rgba(61,131,97,0.15);
+    border-radius: 6px;
+    margin-top: 12px;
+    display: none;
+    letter-spacing: 0.05em;
+  }
+
+  .step-complete.show { display: block; }
+
+  /* ── ANIM ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fadeup { animation: fadeUp 0.5s ease forwards; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Flow<span>Desk</span></div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="badge">INTERACTIVE DEMO</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Workflow Orchestrátor pre malé firmy</div>
+  <h1>Formulár → Úloha → <em>Notifikácia</em></h1>
+  <p>Jeden hlásenie, tri systémy reagujú automaticky. Bez manuálneho kopírovania. Bez chýb.</p>
+
+  <div class="use-cases">
+    <button class="uc-tab active" onclick="setScenario('incident')">🔴 Incident</button>
+    <button class="uc-tab" onclick="setScenario('sla')">📋 SLA Request</button>
+    <button class="uc-tab" onclick="setScenario('task')">✅ Interná úloha</button>
+    <button class="uc-tab" onclick="setScenario('bug')">🐛 Bug Report</button>
+  </div>
+</div>
+
+<!-- DEMO -->
+<div class="demo-wrapper">
+
+  <!-- STEP BAR -->
+  <div class="step-bar">
+    <div class="step-item active" id="s1">
+      <div class="step-num">1</div>
+      <div class="step-label">Formulár</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="s2">
+      <div class="step-num">2</div>
+      <div class="step-label">Úloha vytvorená</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="s3">
+      <div class="step-num">3</div>
+      <div class="step-label">Notifikácia</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="s4">
+      <div class="step-num">4</div>
+      <div class="step-label">Update → Vlákno</div>
+    </div>
+  </div>
+
+  <div class="scenario-label" id="scenario-label">
+    Scenár: <span>Incident Management</span>
+  </div>
+
+  <!-- PANELS -->
+  <div class="panel-row">
+
+    <!-- PANEL 1: FORM -->
+    <div class="panel active-panel" id="panel-form">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(26,58,74,0.12);font-size:16px;">📝</div>
+        <div>
+          <div class="panel-title">eFormulár</div>
+          <div class="panel-subtitle">Google Forms / Hura Form / Typeform</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-field">
+          <label class="form-label">Typ hlásenia</label>
+          <select class="form-select" id="f-type">
+            <option>🔴 Kritický incident</option>
+            <option>⚠️ Problém so službou</option>
+            <option>📋 Nová požiadavka</option>
+            <option>🐛 Bug / Chyba</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Popis problému</label>
+          <textarea class="form-textarea" id="f-desc" placeholder="Stručný popis...">Server nedostupný – produkcia výpadok od 14:32</textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Nahlasuje</label>
+          <input class="form-input" id="f-name" value="Ján Novák" placeholder="Meno" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Priorita</label>
+          <div class="priority-row">
+            <button class="priority-btn" onclick="setPriority('low', this)">LOW</button>
+            <button class="priority-btn" onclick="setPriority('mid', this)">MED</button>
+            <button class="priority-btn sel-high" onclick="setPriority('high', this)">HIGH</button>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="submitForm()" id="submit-btn">
+          ⚡ Odoslať hlásenie
+        </button>
+        <div class="step-complete show" id="form-done" style="display:none">
+          ✓ Formulár odoslaný — automatizácia spustená
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: TASK MANAGER -->
+    <div class="panel" id="panel-task">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(0,82,204,0.12);font-size:15px;">📋</div>
+        <div>
+          <div class="panel-title">Task Manager</div>
+          <div class="panel-subtitle">Trello / Jira / ClickUp / Excel</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="task-empty" class="empty-state">
+          <div class="empty-icon">⬡</div>
+          <div>Čaká sa na hlásenie...</div>
+        </div>
+        <div id="task-list"></div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: CHAT -->
+    <div class="panel" id="panel-chat">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(97,31,105,0.15);font-size:15px;">💬</div>
+        <div>
+          <div class="panel-title">Firemný Chat</div>
+          <div class="panel-subtitle">Slack / Google Chat / Teams</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="chat-empty" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div>Žiadne notifikácie...</div>
+        </div>
+        <div class="chat-messages" id="chat-msgs" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESET -->
+  <button class="reset-btn" onclick="resetDemo()">↺ Resetovať demo</button>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title">Automatizácia</div>
+  <div class="toast-body" id="toast-body"></div>
+</div>
+
+<script>
+  let priority = 'high';
+  let taskCounter = 0;
+  let currentStep = 1;
+  let currentScenario = 'incident';
+  let demoTaskId = null;
+
+  const scenarios = {
+    incident: {
+      label: 'Incident Management',
+      type: '🔴 Kritický incident',
+      desc: 'Server nedostupný – produkcia výpadok od 14:32',
+      name: 'Ján Novák',
+      priority: 'high',
+      assignee: 'DevOps Team',
+      channel: '#incidents',
+    },
+    sla: {
+      label: 'SLA Request Tracking',
+      type: '📋 Nová požiadavka',
+      desc: 'Zákazník ACME Corp požaduje rozšírenie SLA z 8h na 4h odozvu',
+      name: 'Mária Kováčová',
+      priority: 'mid',
+      assignee: 'Account Manager',
+      channel: '#sla-requests',
+    },
+    task: {
+      label: 'Interná úloha',
+      type: '⚠️ Problém so službou',
+      desc: 'Aktualizovať cenník na webe podľa novej tabuľky Q2',
+      name: 'Peter Horváth',
+      priority: 'low',
+      assignee: 'Marketing',
+      channel: '#general',
+    },
+    bug: {
+      label: 'Bug Report systém',
+      type: '🐛 Bug / Chyba',
+      desc: 'Prihlásenie nefunguje v Safari – chyba 403 po zadaní hesla',
+      name: 'Zuzana Blaho',
+      priority: 'high',
+      assignee: 'Dev Team',
+      channel: '#bugs',
+    },
+  };
+
+  function setScenario(s) {
+    currentScenario = s;
+    document.querySelectorAll('.uc-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    const sc = scenarios[s];
+    document.getElementById('f-type').value = sc.type;
+    document.getElementById('f-desc').value = sc.desc;
+    document.getElementById('f-name').value = sc.name;
+    document.getElementById('scenario-label').innerHTML = `Scenár: <span>${sc.label}</span>`;
+    setPriorityDirect(sc.priority);
+    if (currentStep > 1) resetDemo();
+  }
+
+  function setPriority(p, el) {
+    priority = p;
+    document.querySelectorAll('.priority-btn').forEach(b => {
+      b.className = 'priority-btn';
+    });
+    el.className = 'priority-btn sel-' + p;
+  }
+
+  function setPriorityDirect(p) {
+    priority = p;
+    document.querySelectorAll('.priority-btn').forEach(b => {
+      b.className = 'priority-btn';
+    });
+    const btns = document.querySelectorAll('.priority-btn');
+    const map = { low: 0, mid: 1, high: 2 };
+    btns[map[p]].className = 'priority-btn sel-' + p;
+  }
+
+  function showToast(title, body) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-title').textContent = title;
+    document.getElementById('toast-body').textContent = body;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3800);
+  }
+
+  function setStep(n) {
+    currentStep = n;
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('s' + i);
+      el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done');
+      if (i === n) el.classList.add('active');
+    }
+  }
+
+  function submitForm() {
+    const desc = document.getElementById('f-desc').value.trim() || 'Nová úloha';
+    const name = document.getElementById('f-name').value.trim() || 'Používateľ';
+    const sc = scenarios[currentScenario];
+
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('form-done').style.display = 'block';
+    document.getElementById('panel-form').classList.remove('active-panel');
+
+    showToast('⚡ Formulár odoslaný', 'Automatizácia spustená...');
+
+    setTimeout(() => {
+      createTask(desc, name, sc);
+    }, 900);
+  }
+
+  function createTask(desc, name, sc) {
+    taskCounter++;
+    const id = 'FD-' + String(taskCounter).padStart(3, '0');
+    demoTaskId = id;
+    const now = new Date();
+    const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    setStep(2);
+    document.getElementById('panel-task').classList.add('active-panel');
+    document.getElementById('task-empty').style.display = 'none';
+
+    const prioTag = priority === 'high' ? 'tag-high' : priority === 'mid' ? 'tag-mid' : 'tag-low';
+    const prioLabel = priority === 'high' ? 'HIGH' : priority === 'mid' ? 'MED' : 'LOW';
+
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.id = 'task-' + id;
+    card.innerHTML = `
+      <div class="task-top">
+        <div>
+          <div class="task-id">${id} · ${timeStr}</div>
+          <div class="task-title" style="margin-top:3px">${desc.substring(0,60)}${desc.length>60?'…':''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <span class="tag ${prioTag}">${prioLabel}</span>
+          <span class="tag tag-open">OPEN</span>
+        </div>
+      </div>
+      <div class="task-meta">
+        <span>👤 ${name}</span>
+        <span>📌 ${sc.assignee}</span>
+        <span>📣 ${sc.channel}</span>
+      </div>
+      <div class="task-status-row" id="status-row-${id}">
+        <button class="status-btn" onclick="updateTask('${id}', 'in-progress', '${name}')">▶ Začať riešiť</button>
+        <button class="status-btn" onclick="updateTask('${id}', 'resolved', '${name}')">✓ Vyriešené</button>
+      </div>
+    `;
+    document.getElementById('task-list').appendChild(card);
+
+    setTimeout(() => {
+      card.classList.add('visible');
+      showToast('📋 Úloha vytvorená', `${id} priradená tímu ${sc.assignee}`);
+    }, 50);
+
+    setTimeout(() => {
+      sendChatNotification(id, desc, name, sc, prioLabel, 'new');
+    }, 1200);
+  }
+
+  function sendChatNotification(id, desc, name, sc, prioLabel, type) {
+    setStep(3);
+    document.getElementById('panel-task').classList.remove('active-panel');
+    document.getElementById('panel-chat').classList.add('active-panel');
+    document.getElementById('chat-empty').style.display = 'none';
+    document.getElementById('chat-msgs').style.display = 'flex';
+
+    const now = new Date();
+    const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    const msgs = document.getElementById('chat-msgs');
+
+    if (type === 'new') {
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg';
+      msg.id = 'msg-' + id;
+      msg.innerHTML = `
+        <div class="msg-bot">
+          <div class="msg-sender">🤖 FlowDesk Bot → ${sc.channel}</div>
+          <div class="msg-text">
+            Nové hlásenie prijaté!<br>
+            🎫 <strong>${id}</strong> · Priorita: <strong>${prioLabel}</strong><br>
+            📝 ${desc.substring(0,55)}${desc.length>55?'…':''}<br>
+            👤 Nahlásil: ${name} · Priradené: ${sc.assignee}
+          </div>
+          <div class="msg-time">${timeStr}</div>
+        </div>
+      `;
+      msgs.appendChild(msg);
+      setTimeout(() => {
+        msg.classList.add('visible');
+        msgs.scrollTop = msgs.scrollHeight;
+        showToast('💬 Notifikácia odoslaná', `Správa v ${sc.channel} · ${id}`);
+        setStep(4);
+
+        // Show update hint on task
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-family:DM Mono,monospace;font-size:10px;color:var(--muted);text-align:center;padding:8px;letter-spacing:0.05em;';
+        hint.textContent = '↑ Klikni "Začať riešiť" alebo "Vyriešené" na úlohe';
+        document.getElementById('task-list').appendChild(hint);
+      }, 100);
+    } else {
+      // thread update
+      const statusText = type === 'in-progress' ? '▶ Práca začatá' : '✅ Vyriešené';
+      const statusEmoji = type === 'in-progress' ? '🔄' : '✅';
+
+      const threadLabel = document.createElement('div');
+      threadLabel.className = 'thread-label';
+      threadLabel.innerHTML = `Odpoveď vo vlákne`;
+
+      const thread = document.createElement('div');
+      thread.className = 'chat-msg';
+      thread.innerHTML = `
+        <div class="msg-thread">
+          <div class="msg-sender">🤖 FlowDesk Bot</div>
+          <div class="msg-text">
+            ${statusEmoji} <strong>${id}</strong> — ${statusText}<br>
+            👤 Zodpovedný: ${name}<br>
+            ${type === 'in-progress' ? '⏱ SLA hodiny bežia...' : '🎉 Incident uzatvorený — tím môže byť upozornený.'}
+          </div>
+          <div class="msg-time">${timeStr} · vlákno</div>
+        </div>
+      `;
+
+      const parentMsg = document.getElementById('msg-' + id);
+      if (parentMsg) {
+        parentMsg.after(threadLabel);
+        threadLabel.after(thread);
+      } else {
+        msgs.appendChild(threadLabel);
+        msgs.appendChild(thread);
+      }
+
+      setTimeout(() => {
+        thread.classList.add('visible');
+        msgs.scrollTop = msgs.scrollHeight;
+        showToast(type === 'in-progress' ? '🔄 Update odoslaný' : '✅ Resolved!', `Vlákno ${sc.channel} aktualizované`);
+      }, 100);
+    }
+  }
+
+  function updateTask(id, status, name) {
+    const card = document.getElementById('task-' + id);
+    const statusRow = document.getElementById('status-row-' + id);
+    const sc = scenarios[currentScenario];
+
+    // Update tag
+    const tagEl = card.querySelector('.tag-open, .tag-inprogress');
+    if (status === 'in-progress') {
+      if (tagEl) { tagEl.className = 'tag tag-inprogress'; tagEl.textContent = 'IN PROGRESS'; }
+      statusRow.innerHTML = `<button class="status-btn" onclick="updateTask('${id}', 'resolved', '${name}')">✓ Vyriešené</button>`;
+    } else {
+      if (tagEl) { tagEl.className = 'tag tag-done'; tagEl.textContent = 'RESOLVED'; }
+      statusRow.innerHTML = `<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:0.05em;">✓ Uzatvorené</span>`;
+    }
+
+    const desc = document.getElementById('f-desc').value.trim() || 'Úloha';
+    const prioLabel = priority === 'high' ? 'HIGH' : priority === 'mid' ? 'MED' : 'LOW';
+
+    setTimeout(() => {
+      sendChatNotification(id, desc, name, sc, prioLabel, status);
+    }, 400);
+  }
+
+  function resetDemo() {
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('form-done').style.display = 'none';
+    document.getElementById('task-empty').style.display = 'block';
+    document.getElementById('task-list').innerHTML = '';
+    document.getElementById('chat-msgs').style.display = 'none';
+    document.getElementById('chat-msgs').innerHTML = '';
+    document.getElementById('chat-empty').style.display = 'block';
+    document.getElementById('panel-form').classList.add('active-panel');
+    document.getElementById('panel-task').classList.remove('active-panel');
+    document.getElementById('panel-chat').classList.remove('active-panel');
+    setStep(1);
+    taskCounter = 0;
+  }
+
+  // Init
+  setPriorityDirect('high');
+</script>
+</body>
+</html>
