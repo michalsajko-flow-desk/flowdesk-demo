@@ -757,6 +757,24 @@
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 40px;
+  }
+  .foot-wrap {
+    max-width: 1160px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .foot-copy { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--muted-2); }
+  .foot-links { display: flex; gap: 20px; font-size: 12.5px; }
+  .foot-links a { color: var(--muted-2); text-decoration: none; }
+  .foot-links a:hover { color: var(--accent); }
+  @media (max-width: 600px) {
+    footer { padding: 22px 18px; }
+  }
 </style>
 </head>
 <body>
@@ -1243,5 +1261,16 @@
   setPriorityDirect('high');
   setStep(1);
 </script>
+
+<footer>
+  <div class="foot-wrap">
+    <span class="foot-copy">© 2026 FlowDesk · michal.sajko@gmail.com · +421 914 703 355</span>
+    <div class="foot-links">
+      <a href="https://flow-desk.michalsajko.sk">FlowDesk</a>
+      <a href="https://flow-desk.michalsajko.sk/case-study">Case study</a>
+      <a href="https://www.linkedin.com/in/michal-sajko-624979176/">LinkedIn</a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
